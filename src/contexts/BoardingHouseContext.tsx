@@ -8,7 +8,7 @@ const MOCK_BOARDING_HOUSES: Omit<BoardingHouse, 'id'>[] = [
     ownerName: 'John Doe',
     address: '123 Main St, Cebu City',
     description: 'A modern and stylish boarding house in the heart of the city, perfect for students and young professionals. Enjoy our rooftop lounge and high-speed internet.',
-    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/43bd/9102/b9f5173e8557076ba5e86bdbd5f466fd',
+    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/43bd/9102/b9f5173e8557076ba5e86bdbd5f466fd',
     contactNo: '09171234567',
     facebookUrl: 'https://facebook.com/urbannest',
     availableRooms: 2,
@@ -22,7 +22,7 @@ const MOCK_BOARDING_HOUSES: Omit<BoardingHouse, 'id'>[] = [
     ownerName: 'Jane Smith',
     address: '456 Oak Avenue, Mandaue City',
     description: 'Find peace and quiet at Serene Stay. A comfortable and affordable option with a beautiful garden and friendly atmosphere.',
-    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0397/7d65/57ce3d70b9b66c773f1dfd6dbd3a4945',
+    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0397/7d65/57ce3d70b9b66c773f1dfd6dbd3a4945',
     contactNo: '09187654321',
     facebookUrl: 'https://facebook.com/serenestay',
     availableRooms: 1,
@@ -80,7 +80,7 @@ export const BoardingHouseProvider: React.FC<{ children: ReactNode }> = ({ child
     if (imageFile) {
       imageUrl = URL.createObjectURL(imageFile);
     } else if (!imageUrl) {
-      imageUrl = `https://img-wrapper.vercel.app/image?url=https://placehold.co/600x400/e0f7fa/08637c?text=${encodeURIComponent(houseData.name)}`;
+      imageUrl = `https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://placehold.co/600x400/e0f7fa/08637c?text=${encodeURIComponent(houseData.name)}`;
     }
 
     const allHouses = getStoredHouses();
