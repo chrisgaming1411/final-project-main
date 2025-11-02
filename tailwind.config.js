@@ -15,6 +15,10 @@ export default {
         'brand-darker-blue': '#111184',
         'brand-light-gray': '#F5F5F5',
         'brand-teal': '#08637C',
+        'brand-cyan-gradient-start': '#009DD1',
+        'brand-off-white': '#FFF8F8',
+        'brand-gray-text': '#818080',
+        'brand-cyan-border': '#06CDF5',
       },
       fontFamily: {
         inter: ['"Inter"', 'sans-serif'],
