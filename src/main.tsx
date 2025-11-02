@@ -14,6 +14,9 @@ import MyBoardinghousePage from './pages/owner/MyBoardinghouse.tsx';
 import OwnerDashboardPage from './pages/owner/Dashboard.tsx';
 import AddNewPage from './pages/owner/AddNew.tsx';
 import AccountSettingsPage from './pages/owner/AccountSettings.tsx';
+import FindBoardinghousePage from './pages/FindBoardinghouse.tsx';
+import BoardingHouseDetailsPage from './pages/BoardingHouseDetails.tsx';
+import { BoardingHouseProvider } from './contexts/BoardingHouseContext.tsx';
 
 const router = createBrowserRouter([
   {
@@ -26,6 +29,14 @@ const router = createBrowserRouter([
       {
         path: 'about',
         element: <AboutPage />,
+      },
+      {
+        path: 'find',
+        element: <FindBoardinghousePage />,
+      },
+      {
+        path: 'listing/:id',
+        element: <BoardingHouseDetailsPage />,
       },
     ],
   },
@@ -49,6 +60,7 @@ const router = createBrowserRouter([
       { index: true, element: <OwnerDashboardPage /> },
       { path: 'my-boardinghouse', element: <MyBoardinghousePage /> },
       { path: 'add-new', element: <AddNewPage /> },
+      { path: 'edit-listing/:id', element: <AddNewPage /> },
       { path: 'settings', element: <AccountSettingsPage /> },
       // Redirect base dashboard to the main view
       { path: '', element: <Navigate to="my-boardinghouse" replace /> }
@@ -58,6 +70,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <BoardingHouseProvider>
+      <RouterProvider router={router} />
+    </BoardingHouseProvider>
   </StrictMode>,
 );

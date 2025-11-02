@@ -1,17 +1,25 @@
 import React from 'react';
-
-interface BoardingHouse {
-  id: number;
-  name: string;
-  availableRooms: number;
-  imageUrl: string;
-}
+import { useNavigate } from 'react-router-dom';
+import { useBoardingHouses, BoardingHouse } from '../contexts/BoardingHouseContext';
 
 interface BoardingHouseCardProps {
   house: BoardingHouse;
 }
 
 const BoardingHouseCard: React.FC<BoardingHouseCardProps> = ({ house }) => {
+  const navigate = useNavigate();
+  const { deleteBoardingHouse } = useBoardingHouses();
+
+  const handleEdit = () => {
+    navigate(`/dashboard/edit-listing/${house.id}`);
+  };
+
+  const handleDelete = () => {
+    if (window.confirm(`Are you sure you want to delete "${house.name}"?`)) {
+      deleteBoardingHouse(house.id);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl shadow-lg p-6 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8 transition-transform transform hover:scale-[1.02]">
       <img
@@ -23,11 +31,23 @@ const BoardingHouseCard: React.FC<BoardingHouseCardProps> = ({ house }) => {
         <h2 className="text-3xl font-bold text-brand-teal mb-2">{house.name}</h2>
         <p className="text-lg text-black mb-6">Available Rooms : {house.availableRooms}</p>
       </div>
-      <div className="flex items-center space-x-4">
-        <button className="text-brand-cyan-border font-semibold text-lg py-2 px-10 rounded-full border border-brand-gray-text hover:bg-gray-100 transition-colors">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <button 
+          onClick={() => navigate(`/listing/${house.id}`)}
+          className="bg-gradient-button text-white font-semibold text-md py-2 px-6 rounded-full hover:opacity-90 transition-opacity w-full sm:w-auto"
+        >
+          Details
+        </button>
+        <button 
+          onClick={handleEdit}
+          className="text-brand-cyan-border font-semibold text-md py-2 px-6 rounded-full border border-brand-gray-text hover:bg-gray-100 transition-colors w-full sm:w-auto"
+        >
           Edit
         </button>
-        <button className="bg-brand-cyan-border text-white font-semibold text-lg py-2 px-8 rounded-full hover:opacity-90 transition-opacity">
+        <button 
+          onClick={handleDelete}
+          className="bg-red-500 text-white font-semibold text-md py-2 px-6 rounded-full hover:bg-red-600 transition-opacity w-full sm:w-auto"
+        >
           Delete
         </button>
       </div>
