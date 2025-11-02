@@ -6,24 +6,20 @@ import { useAuth } from '../contexts/AuthContext';
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [userType, setUserType] = useState<'owner' | 'seeker'>('owner');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
 
-    if (!name || !email || !password) {
+    if (!name || !email) {
       setError('Please fill in all fields.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
       return;
     }
     
@@ -31,22 +27,23 @@ const RegisterPage: React.FC = () => {
 
     const { error: signUpError } = await signUp({
       email,
-      password,
-      data: {
-        full_name: name,
-        user_type: userType,
-      }
+      name,
+      type: userType,
     });
 
     setLoading(false);
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(signUpError);
     } else {
-      setMessage('Registration successful! Please check your email to confirm your account.');
-      setName('');
-      setEmail('');
-      setPassword('');
+      setMessage('Registration successful! Redirecting to your dashboard...');
+      setTimeout(() => {
+        if (userType === 'owner') {
+          navigate('/dashboard');
+        } else {
+          navigate('/seeker-dashboard');
+        }
+      }, 2000);
     }
   };
 
@@ -73,17 +70,6 @@ const RegisterPage: React.FC = () => {
             className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-brand-gray-text placeholder-brand-gray-text rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="relative">
-          <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-brand-gray-text placeholder-brand-gray-text rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>

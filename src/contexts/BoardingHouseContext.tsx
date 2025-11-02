@@ -1,8 +1,50 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { BoardingHouse, mapBoardingHouseFromSupabase, Room } from '../types';
-import { TablesInsert, TablesUpdate } from '../types/supabase';
+import { BoardingHouse, Room } from '../types';
 import { useAuth } from './AuthContext';
+
+const MOCK_BOARDING_HOUSES: Omit<BoardingHouse, 'id'>[] = [
+  {
+    name: 'Urban Nest',
+    ownerName: 'John Doe',
+    address: '123 Main St, Cebu City',
+    description: 'A modern and stylish boarding house in the heart of the city, perfect for students and young professionals. Enjoy our rooftop lounge and high-speed internet.',
+    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/43bd/9102/b9f5173e8557076ba5e86bdbd5f466fd',
+    contactNo: '09171234567',
+    facebookUrl: 'https://facebook.com/urbannest',
+    availableRooms: 2,
+    rooms: [
+      { id: 101, name: 'Room 101', price: '5000', capacity: 'Good for 1 person', inclusions: ['Bed', 'Wi-Fi', 'Cabinet'] },
+      { id: 102, name: 'Room 102', price: '8000', capacity: 'Good for 2 persons', inclusions: ['Bed', 'Wi-Fi', 'Cabinet', 'Aircon'] },
+    ],
+  },
+  {
+    name: 'Serene Stay',
+    ownerName: 'Jane Smith',
+    address: '456 Oak Avenue, Mandaue City',
+    description: 'Find peace and quiet at Serene Stay. A comfortable and affordable option with a beautiful garden and friendly atmosphere.',
+    imageUrl: 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0397/7d65/57ce3d70b9b66c773f1dfd6dbd3a4945',
+    contactNo: '09187654321',
+    facebookUrl: 'https://facebook.com/serenestay',
+    availableRooms: 1,
+    rooms: [
+      { id: 201, name: 'Solo Pad', price: '4500', capacity: 'Good for 1 person', inclusions: ['Bed', 'Private CR'] },
+    ],
+  },
+];
+
+const getStoredHouses = (): BoardingHouse[] => {
+  const houses = localStorage.getItem('boardingHouses');
+  if (houses) {
+    return JSON.parse(houses);
+  }
+  const initialHouses = MOCK_BOARDING_HOUSES.map((house, index) => ({ ...house, id: index + 1 }));
+  localStorage.setItem('boardingHouses', JSON.stringify(initialHouses));
+  return initialHouses;
+};
+
+const storeHouses = (houses: BoardingHouse[]) => {
+  localStorage.setItem('boardingHouses', JSON.stringify(houses));
+};
 
 interface BoardingHouseContextType {
   boardingHouses: BoardingHouse[];
@@ -20,133 +62,72 @@ export const BoardingHouseProvider: React.FC<{ children: ReactNode }> = ({ child
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchBoardingHouses = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('boarding_houses')
-      .select(`
-        *,
-        rooms(*),
-        profiles(*)
-      `);
-
-    if (error) {
-      console.error('Error fetching boarding houses:', error);
-      setBoardingHouses([]);
-    } else if (data) {
-      const mappedData = data.map(house => mapBoardingHouseFromSupabase(house as any));
-      setBoardingHouses(mappedData);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchBoardingHouses();
+    setLoading(true);
+    const houses = getStoredHouses();
+    setBoardingHouses(houses);
+    setLoading(false);
   }, []);
 
   const getBoardingHouseById = (id: number) => {
     return boardingHouses.find(house => house.id === id);
   };
 
-  const uploadBoardingHouseImage = async (imageFile: File, houseName: string): Promise<string | null> => {
-    if (!user) return null;
-    const filePath = `${user.id}/${houseName.replace(/\s+/g, '-')}-${Date.now()}`;
-    const { error: uploadError } = await supabase.storage.from('boarding-house-images').upload(filePath, imageFile);
-    if (uploadError) {
-      console.error('Image upload error:', uploadError);
-      return null;
-    }
-    const { data } = supabase.storage.from('boarding-house-images').getPublicUrl(filePath);
-    return data.publicUrl;
-  };
-
-  const addBoardingHouse = async (houseData: Omit<BoardingHouse, 'id'| 'availableRooms' | 'ownerName'>, imageFile?: File) => {
+  const addBoardingHouse = async (houseData: Omit<BoardingHouse, 'id' | 'availableRooms' | 'ownerName'>, imageFile?: File) => {
     if (!user) return { error: 'User not authenticated' };
     
     let imageUrl = houseData.imageUrl;
     if (imageFile) {
-      const uploadedUrl = await uploadBoardingHouseImage(imageFile, houseData.name);
-      if (!uploadedUrl) return { error: 'Image upload failed' };
-      imageUrl = uploadedUrl;
+      imageUrl = URL.createObjectURL(imageFile);
+    } else if (!imageUrl) {
+      imageUrl = `https://img-wrapper.vercel.app/image?url=https://placehold.co/600x400/e0f7fa/08637c?text=${encodeURIComponent(houseData.name)}`;
     }
 
-    const houseInsert: TablesInsert<'boarding_houses'> = {
-      name: houseData.name,
-      address: houseData.address,
-      description: houseData.description,
-      contact_no: houseData.contactNo,
-      facebook_url: houseData.facebookUrl,
-      image_url: imageUrl,
-      owner_id: user.id
+    const allHouses = getStoredHouses();
+    const newHouse: BoardingHouse = {
+      ...houseData,
+      id: allHouses.length > 0 ? Math.max(...allHouses.map(h => h.id)) + 1 : 1,
+      ownerName: user.name,
+      availableRooms: houseData.rooms.length,
+      imageUrl,
     };
 
-    const { data: newHouse, error: houseError } = await supabase.from('boarding_houses').insert(houseInsert).select().single();
-
-    if (houseError) return { error: houseError };
-
-    if (houseData.rooms.length > 0) {
-      const roomsInsert: TablesInsert<'rooms'>[] = houseData.rooms.map(room => ({
-        boarding_house_id: newHouse.id,
-        name: room.name,
-        price: parseFloat(room.price),
-        capacity: room.capacity,
-        inclusions: room.inclusions
-      }));
-      const { error: roomsError } = await supabase.from('rooms').insert(roomsInsert);
-      if (roomsError) return { error: roomsError };
-    }
+    const updatedHouses = [...allHouses, newHouse];
+    storeHouses(updatedHouses);
+    setBoardingHouses(updatedHouses);
     
-    await fetchBoardingHouses();
     return { error: null };
   };
 
   const updateBoardingHouse = async (id: number, updatedData: Omit<BoardingHouse, 'id' | 'availableRooms' | 'ownerName'>, imageFile?: File) => {
     let imageUrl = updatedData.imageUrl;
     if (imageFile) {
-        const uploadedUrl = await uploadBoardingHouseImage(imageFile, updatedData.name);
-        if (!uploadedUrl) return { error: 'Image upload failed' };
-        imageUrl = uploadedUrl;
-    }
-
-    const houseUpdate: TablesUpdate<'boarding_houses'> = {
-        name: updatedData.name,
-        address: updatedData.address,
-        description: updatedData.description,
-        contact_no: updatedData.contactNo,
-        facebook_url: updatedData.facebookUrl,
-        image_url: imageUrl,
-    };
-
-    const { error: houseError } = await supabase.from('boarding_houses').update(houseUpdate).eq('id', id);
-    if (houseError) return { error: houseError };
-
-    // Simple approach: delete all existing rooms and re-insert.
-    const { error: deleteError } = await supabase.from('rooms').delete().eq('boarding_house_id', id);
-    if (deleteError) return { error: deleteError };
-
-    if (updatedData.rooms.length > 0) {
-        const roomsInsert: TablesInsert<'rooms'>[] = updatedData.rooms.map(room => ({
-            boarding_house_id: id,
-            name: room.name,
-            price: parseFloat(room.price),
-            capacity: room.capacity,
-            inclusions: room.inclusions,
-        }));
-        const { error: roomsError } = await supabase.from('rooms').insert(roomsInsert);
-        if (roomsError) return { error: roomsError };
+        imageUrl = URL.createObjectURL(imageFile);
     }
     
-    await fetchBoardingHouses();
+    const allHouses = getStoredHouses();
+    const houseIndex = allHouses.findIndex(h => h.id === id);
+    if (houseIndex === -1) return { error: 'Boarding house not found' };
+
+    const originalHouse = allHouses[houseIndex];
+    const updatedHouse = {
+      ...originalHouse,
+      ...updatedData,
+      imageUrl,
+      availableRooms: updatedData.rooms.length,
+    };
+
+    allHouses[houseIndex] = updatedHouse;
+    storeHouses(allHouses);
+    setBoardingHouses(allHouses);
+
     return { error: null };
   };
 
   const deleteBoardingHouse = async (id: number) => {
-    const { error } = await supabase.from('boarding_houses').delete().eq('id', id);
-    if (error) {
-      console.error('Error deleting boarding house:', error);
-    } else {
-      setBoardingHouses(prev => prev.filter(house => house.id !== id));
-    }
+    const updatedHouses = boardingHouses.filter(house => house.id !== id);
+    storeHouses(updatedHouses);
+    setBoardingHouses(updatedHouses);
   };
 
   return (

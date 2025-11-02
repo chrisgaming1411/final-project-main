@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, ShieldAlert, Trash2, Camera } from 'lucide-react';
+import { User, Trash2, Camera } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
-import { supabase } from '../supabaseClient';
 
 const AccountSettingsForm: React.FC = () => {
   const { user, logout, updateUser, deleteAccount } = useAuth();
@@ -12,14 +11,11 @@ const AccountSettingsForm: React.FC = () => {
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setNewConfirmPassword] = useState('');
-
+  
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
   
-  const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'delete'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'delete'>('profile');
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,14 +23,9 @@ const AccountSettingsForm: React.FC = () => {
   useEffect(() => {
     if (user) {
       setName(user.name);
+      setEmail(user.id); // Using ID as email in simulation
       setProfilePicPreview(user.profilePicture || null);
     }
-    const sessionUser = supabase.auth.getUser();
-    sessionUser.then(res => {
-      if (res.data.user) {
-        setEmail(res.data.user.email || '');
-      }
-    });
   }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,32 +53,6 @@ const AccountSettingsForm: React.FC = () => {
     }
   };
   
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setFeedback({ type: 'error', message: 'New passwords do not match.' });
-      return;
-    }
-    if (newPassword.length < 6) {
-      setFeedback({ type: 'error', message: 'Password must be at least 6 characters.' });
-      return;
-    }
-    setLoading(true);
-    setFeedback({ type: '', message: '' });
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    
-    setLoading(false);
-    if (error) {
-      setFeedback({ type: 'error', message: error.message });
-    } else {
-      setFeedback({ type: 'success', message: 'Password changed successfully!' });
-      setCurrentPassword('');
-      setNewPassword('');
-      setNewConfirmPassword('');
-    }
-  };
-
   const confirmDeleteAccount = async () => {
     setLoading(true);
     const { error } = await deleteAccount();
@@ -115,9 +80,6 @@ const AccountSettingsForm: React.FC = () => {
         <div className="flex flex-col md:flex-row border-b mb-8">
           <button onClick={() => setActiveSection('profile')} className={`flex-1 py-4 text-lg font-semibold flex items-center justify-center gap-2 border-b-4 ${activeSection === 'profile' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-black'}`}>
             <User /> Profile
-          </button>
-          <button onClick={() => setActiveSection('password')} className={`flex-1 py-4 text-lg font-semibold flex items-center justify-center gap-2 border-b-4 ${activeSection === 'password' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-black'}`}>
-            <ShieldAlert /> Change Password
           </button>
           <button onClick={() => setActiveSection('delete')} className={`flex-1 py-4 text-lg font-semibold flex items-center justify-center gap-2 border-b-4 ${activeSection === 'delete' ? 'border-red-500 text-red-500' : 'border-transparent text-gray-500 hover:text-black'}`}>
             <Trash2 /> Delete Account
@@ -172,25 +134,6 @@ const AccountSettingsForm: React.FC = () => {
             <div className="text-right">
               <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90 disabled:opacity-50" disabled={loading}>
                 {loading ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {activeSection === 'password' && (
-          <form onSubmit={handlePasswordChange} className="space-y-6">
-            {/* Current password not needed for Supabase password update for security reasons */}
-            <div>
-              <label htmlFor="newPassword"  className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-              <input type="password" id="newPassword" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
-            </div>
-            <div>
-              <label htmlFor="confirmPassword"  className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-              <input type="password" id="confirmPassword" value={confirmPassword} onChange={e => setNewConfirmPassword(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
-            </div>
-            <div className="text-right">
-              <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90 disabled:opacity-50" disabled={loading}>
-                {loading ? 'Updating...' : 'Update Password'}
               </button>
             </div>
           </form>

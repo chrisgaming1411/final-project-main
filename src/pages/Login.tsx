@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -25,17 +24,17 @@ const LoginPage: React.FC = () => {
     setError('');
     setLoading(true);
 
-    if (!email || !password) {
-      setError('Please fill in all fields.');
+    if (!email) {
+      setError('Please enter your email address.');
       setLoading(false);
       return;
     }
     
-    const { error: loginError } = await login({ email, password });
+    const { error: loginError } = await login({ email });
     setLoading(false);
 
     if (loginError) {
-      setError(loginError.message);
+      setError(loginError);
     }
     // Successful login is handled by the useEffect hook
   };
@@ -48,21 +47,10 @@ const LoginPage: React.FC = () => {
           <input
             type="email"
             id="email"
-            placeholder="Email Address"
+            placeholder="Email Address (this is your username)"
             className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-brand-gray-text placeholder-brand-gray-text rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="relative">
-          <input
-            type="password"
-            id="password"
-            placeholder="Password"
-            className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-brand-gray-text placeholder-brand-gray-text rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>

@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { useAuth } from './AuthContext';
+
+const getStoredFavorites = (userId: string): number[] => {
+    const favorites = localStorage.getItem(`favorites_${userId}`);
+    return favorites ? JSON.parse(favorites) : [];
+};
+
+const storeFavorites = (userId: string, favorites: number[]) => {
+    localStorage.setItem(`favorites_${userId}`, JSON.stringify(favorites));
+};
 
 interface FavoritesContextType {
   favoriteIds: number[];
@@ -18,28 +26,11 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!user) {
-        setFavoriteIds([]);
-        setLoading(false);
-        return;
-      }
+    if (isAuthenticated && user) {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('boarding_house_id')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching favorites:', error);
-      } else {
-        setFavoriteIds(data.map(fav => fav.boarding_house_id));
-      }
+      const userFavorites = getStoredFavorites(user.id);
+      setFavoriteIds(userFavorites);
       setLoading(false);
-    };
-
-    if (isAuthenticated) {
-      fetchFavorites();
     } else {
       setFavoriteIds([]);
       setLoading(false);
@@ -48,29 +39,20 @@ export const FavoritesProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const addFavorite = async (id: number) => {
     if (!user) return;
-    const { error } = await supabase.from('favorites').insert({
-      user_id: user.id,
-      boarding_house_id: id,
-    });
-    if (error) {
-      console.error('Error adding favorite:', error);
-    } else {
-      setFavoriteIds(prev => [...prev, id]);
-    }
+    setLoading(true);
+    const updatedFavorites = [...favoriteIds, id];
+    setFavoriteIds(updatedFavorites);
+    storeFavorites(user.id, updatedFavorites);
+    setLoading(false);
   };
 
   const removeFavorite = async (id: number) => {
     if (!user) return;
-    const { error } = await supabase
-      .from('favorites')
-      .delete()
-      .match({ user_id: user.id, boarding_house_id: id });
-    
-    if (error) {
-      console.error('Error removing favorite:', error);
-    } else {
-      setFavoriteIds(prev => prev.filter(favId => favId !== id));
-    }
+    setLoading(true);
+    const updatedFavorites = favoriteIds.filter(favId => favId !== id);
+    setFavoriteIds(updatedFavorites);
+    storeFavorites(user.id, updatedFavorites);
+    setLoading(false);
   };
 
   const isFavorite = (id: number) => {
