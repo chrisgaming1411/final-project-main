@@ -19,6 +19,8 @@ export default {
         'brand-off-white': '#FFF8F8',
         'brand-gray-text': '#818080',
         'brand-cyan-border': '#06CDF5',
+        'brand-purple-start': '#3C1BB3',
+        'brand-purple-end': '#000099',
       },
       fontFamily: {
         inter: ['"Inter"', 'sans-serif'],
@@ -26,6 +28,7 @@ export default {
       backgroundImage: {
         'gradient-primary': 'linear-gradient(to right, #62CFF4, #2C67F2)',
         'gradient-button': 'linear-gradient(to right, #0B0B45, #111184)',
+        'gradient-add-button': 'linear-gradient(to right, #3C1BB3, #000099)',
       }
     },
   },

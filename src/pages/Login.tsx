@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -8,6 +8,7 @@ const LoginPage: React.FC = () => {
   const [userType, setUserType] = useState('owner');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +25,8 @@ const LoginPage: React.FC = () => {
     setTimeout(() => {
       console.log('Login successful!');
       setLoading(false);
-      alert('Login successful! (This is a simulation)');
+      alert('Login successful! Redirecting to dashboard... (Simulation)');
+      navigate('/dashboard/my-boardinghouse');
     }, 1500);
   };
 

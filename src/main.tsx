@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 
@@ -9,6 +9,11 @@ import AboutPage from './pages/About.tsx';
 import LoginPage from './pages/Login.tsx';
 import RegisterPage from './pages/Register.tsx';
 import AuthLayout from './layouts/AuthLayout.tsx';
+import DashboardLayout from './layouts/DashboardLayout.tsx';
+import MyBoardinghousePage from './pages/owner/MyBoardinghouse.tsx';
+import OwnerDashboardPage from './pages/owner/Dashboard.tsx';
+import AddNewPage from './pages/owner/AddNew.tsx';
+import AccountSettingsPage from './pages/owner/AccountSettings.tsx';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +42,18 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: 'dashboard',
+    element: <DashboardLayout />,
+    children: [
+      { index: true, element: <OwnerDashboardPage /> },
+      { path: 'my-boardinghouse', element: <MyBoardinghousePage /> },
+      { path: 'add-new', element: <AddNewPage /> },
+      { path: 'settings', element: <AccountSettingsPage /> },
+      // Redirect base dashboard to the main view
+      { path: '', element: <Navigate to="my-boardinghouse" replace /> }
+    ]
+  }
 ]);
 
 createRoot(document.getElementById('root')!).render(
