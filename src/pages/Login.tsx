@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -31,26 +31,13 @@ const LoginPage: React.FC = () => {
       return;
     }
     
-    // Simulate API call and check localStorage
-    setTimeout(() => {
-      try {
-        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const foundUser = existingUsers.find((user: any) => user.email === email);
+    const { error: loginError } = await login({ email, password });
+    setLoading(false);
 
-        if (foundUser && foundUser.password === password) {
-          const loggedInUser = { name: foundUser.name, type: foundUser.userType as 'owner' | 'seeker' };
-          login(loggedInUser);
-          setLoading(false);
-          // Navigation is handled by the useEffect hook
-        } else {
-          setError('Invalid email or password. Please try again or register.');
-          setLoading(false);
-        }
-      } catch (err) {
-        setError('An error occurred during login. Please try again.');
-        setLoading(false);
-      }
-    }, 1000);
+    if (loginError) {
+      setError(loginError.message);
+    }
+    // Successful login is handled by the useEffect hook
   };
 
   return (
@@ -91,7 +78,7 @@ const LoginPage: React.FC = () => {
         </button>
 
         <p className="text-center text-black text-xl pt-4">
-          <Link to="/register" className="hover:underline">Register Instead</Link>
+          Don't have an account? <Link to="/register" className="hover:underline font-semibold">Register Instead</Link>
         </p>
       </form>
     </div>

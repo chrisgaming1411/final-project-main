@@ -1,7 +1,7 @@
 import React from 'react';
-import { MapPin, Tag, Users, CheckCircle, Heart } from 'lucide-react';
+import { MapPin, Tag, Users, CheckCircle, Heart, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BoardingHouse } from '../contexts/BoardingHouseContext';
+import { BoardingHouse } from '../types';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,7 +11,7 @@ interface SeekerBoardingHouseCardProps {
 
 const SeekerBoardingHouseCard: React.FC<SeekerBoardingHouseCardProps> = ({ house }) => {
   const { user } = useAuth();
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { addFavorite, removeFavorite, isFavorite, loading } = useFavorites();
   const isFavorited = isFavorite(house.id);
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
@@ -47,10 +47,11 @@ const SeekerBoardingHouseCard: React.FC<SeekerBoardingHouseCardProps> = ({ house
       {user?.type === 'seeker' && (
         <button
           onClick={handleToggleFavorite}
-          className={`absolute top-4 right-4 p-2 rounded-full transition-colors z-10 ${isFavorited ? 'bg-red-500 text-white' : 'bg-white/70 text-gray-600 hover:text-red-500'}`}
+          disabled={loading}
+          className={`absolute top-4 right-4 p-2 rounded-full transition-colors z-10 disabled:opacity-50 ${isFavorited ? 'bg-red-500 text-white' : 'bg-white/70 text-gray-600 hover:text-red-500'}`}
           aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <Heart fill={isFavorited ? 'currentColor' : 'none'} size={22} />
+          {loading ? <Loader2 className="animate-spin" size={22} /> : <Heart fill={isFavorited ? 'currentColor' : 'none'} size={22} />}
         </button>
       )}
       <img

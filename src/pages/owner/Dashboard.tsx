@@ -1,24 +1,24 @@
 import React from 'react';
 import { useBoardingHouses } from '../../contexts/BoardingHouseContext';
 import ReactECharts from 'echarts-for-react';
-import { Home, BedDouble, PlusCircle } from 'lucide-react';
+import { Home, BedDouble, PlusCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
 const OwnerDashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { boardingHouses } = useBoardingHouses();
+  const { boardingHouses, loading } = useBoardingHouses();
 
-  // In a real app, you'd filter boardingHouses by the current user/owner.
-  // For this simulation, we'll use all of them.
+  // Filter for properties owned by the current user
+  const myBoardingHouses = boardingHouses.filter(house => house.ownerName === user?.name);
 
-  const totalProperties = boardingHouses.length;
-  const totalRooms = boardingHouses.reduce((acc, house) => acc + house.rooms.length, 0);
+  const totalProperties = myBoardingHouses.length;
+  const totalRooms = myBoardingHouses.reduce((acc, house) => acc + house.rooms.length, 0);
 
-  const pieChartData = boardingHouses.map(house => ({
+  const pieChartData = myBoardingHouses.map(house => ({
     value: house.rooms.length,
     name: house.name,
-  })).filter(item => item.value > 0); // Only show properties with rooms in the chart
+  })).filter(item => item.value > 0);
 
   const pieChartOptions = {
     title: {
@@ -48,7 +48,7 @@ const OwnerDashboardPage: React.FC = () => {
         name: 'Property',
         type: 'pie',
         radius: ['40%', '70%'],
-        center: ['65%', '50%'], // Adjust center to make space for legend
+        center: ['65%', '50%'],
         avoidLabelOverlap: false,
         label: {
           show: false,
@@ -73,8 +73,16 @@ const OwnerDashboardPage: React.FC = () => {
         }
       }
     ],
-    color: ['#2C67F2', '#08637C', '#62CFF4', '#3C1BB3', '#000099'] // Colors from theme
+    color: ['#2C67F2', '#08637C', '#62CFF4', '#3C1BB3', '#000099']
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Loader2 className="animate-spin text-brand-blue" size={48} />
+      </div>
+    );
+  }
   
   if (totalProperties === 0) {
     return (
@@ -109,7 +117,6 @@ const OwnerDashboardPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 flex items-center justify-between">
           <div>
@@ -131,7 +138,6 @@ const OwnerDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="bg-white rounded-2xl shadow-lg p-8">
         {pieChartData.length > 0 ? (
           <ReactECharts

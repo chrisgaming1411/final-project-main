@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('owner');
+  const [userType, setUserType] = useState<'owner' | 'seeker'>('owner');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { signUp } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
 
     if (!name || !email || !password) {
       setError('Please fill in all fields.');
@@ -26,31 +29,25 @@ const RegisterPage: React.FC = () => {
     
     setLoading(true);
 
-    // Simulate storing user in localStorage
-    setTimeout(() => {
-      try {
-        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const userExists = existingUsers.some((user: any) => user.email === email);
-
-        if (userExists) {
-          setError('An account with this email already exists.');
-          setLoading(false);
-          return;
-        }
-
-        // In a real app, password would be hashed before storing.
-        const newUser = { name, email, password, userType };
-        existingUsers.push(newUser);
-        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-        
-        setLoading(false);
-        alert('Registration successful! Redirecting to login...');
-        navigate('/login');
-      } catch (err) {
-        setError('An error occurred during registration. Please try again.');
-        setLoading(false);
+    const { error: signUpError } = await signUp({
+      email,
+      password,
+      data: {
+        full_name: name,
+        user_type: userType,
       }
-    }, 1000);
+    });
+
+    setLoading(false);
+
+    if (signUpError) {
+      setError(signUpError.message);
+    } else {
+      setMessage('Registration successful! Please check your email to confirm your account.');
+      setName('');
+      setEmail('');
+      setPassword('');
+    }
   };
 
   return (
@@ -95,7 +92,7 @@ const RegisterPage: React.FC = () => {
             id="userType"
             className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-black rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue appearance-none shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
             value={userType}
-            onChange={(e) => setUserType(e.target.value)}
+            onChange={(e) => setUserType(e.target.value as 'owner' | 'seeker')}
           >
             <option value="owner">I'm an Owner</option>
             <option value="seeker">I'm a Seeker</option>
@@ -104,6 +101,7 @@ const RegisterPage: React.FC = () => {
         </div>
         
         {error && <p className="text-red-500 text-center text-lg">{error}</p>}
+        {message && <p className="text-green-500 text-center text-lg">{message}</p>}
 
         <button
           type="submit"

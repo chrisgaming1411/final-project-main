@@ -1,45 +1,68 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { User, ShieldAlert, Trash2, Camera } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
+import { supabase } from '../supabaseClient';
 
 const AccountSettingsForm: React.FC = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, deleteAccount } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState('johndoe@example.com'); // Placeholder email
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setNewConfirmPassword] = useState('');
 
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(user?.profilePicture || null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
   
   const [activeSection, setActiveSection] = useState<'profile' | 'password' | 'delete'>('profile');
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setProfilePicPreview(user.profilePicture || null);
+    }
+    const sessionUser = supabase.auth.getUser();
+    sessionUser.then(res => {
+      if (res.data.user) {
+        setEmail(res.data.user.email || '');
+      }
+    });
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setProfilePicFile(file);
       setProfilePicPreview(URL.createObjectURL(file));
-      setFeedback({ type: '', message: '' }); // Clear previous feedback
+      setFeedback({ type: '', message: '' });
     }
   };
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would upload the file if profilePicFile is not null
-    updateUser({ name, profilePicture: profilePicPreview || undefined });
-    setFeedback({ type: 'success', message: 'Profile updated successfully!' });
-    setProfilePicFile(null); // Reset file state after "upload"
+    setLoading(true);
+    setFeedback({ type: '', message: '' });
+
+    const { error } = await updateUser({ name, newAvatarFile: profilePicFile || undefined });
+    
+    setLoading(false);
+    if (error) {
+      setFeedback({ type: 'error', message: error });
+    } else {
+      setFeedback({ type: 'success', message: 'Profile updated successfully!' });
+      setProfilePicFile(null);
+    }
   };
   
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setFeedback({ type: 'error', message: 'New passwords do not match.' });
@@ -49,17 +72,32 @@ const AccountSettingsForm: React.FC = () => {
       setFeedback({ type: 'error', message: 'Password must be at least 6 characters.' });
       return;
     }
-    setFeedback({ type: 'success', message: 'Password changed successfully! (Simulation)' });
-    // Reset fields
-    setCurrentPassword('');
-    setNewPassword('');
-    setNewConfirmPassword('');
+    setLoading(true);
+    setFeedback({ type: '', message: '' });
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    
+    setLoading(false);
+    if (error) {
+      setFeedback({ type: 'error', message: error.message });
+    } else {
+      setFeedback({ type: 'success', message: 'Password changed successfully!' });
+      setCurrentPassword('');
+      setNewPassword('');
+      setNewConfirmPassword('');
+    }
   };
 
-  const confirmDeleteAccount = () => {
-    alert('Account deleted successfully. Logging you out. (Simulation)');
-    logout();
-    navigate('/');
+  const confirmDeleteAccount = async () => {
+    setLoading(true);
+    const { error } = await deleteAccount();
+    setLoading(false);
+    if (error) {
+      setFeedback({ type: 'error', message: error });
+    } else {
+      alert('Account deleted successfully. Logging you out.');
+      navigate('/');
+    }
   };
 
   return (
@@ -97,7 +135,7 @@ const AccountSettingsForm: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b pb-8 mb-6">
               <div className="relative">
                 <img
-                  src={profilePicPreview || 'https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/72f7/1c48/1924a99473c91bfdac585c9cc9c2bc58?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mJnJD9EzUMxuOGa0xzUEmYC0JQNIRhM704Zqs0bzBIsJ~XT-QNlVIkfzY9vZFBTayulfvYsx-2Xp~dBb3O3yYB905KQ6s0lCcnt7BaGeDk2xnx3Gp1giTw~f9AJ6Ce9t11JF4iZ2gZVd4kCv339PTlrWc~-wRUK0pS3iwo5lHuDFCFbFIHyJoj3LijnqmvnthP8QAH6Jg-5Ef8bfZKmzc~x8~LU5eMKsbqLw4UkZjmI6bWc1BW4hkxyC5rFNHICjX0w7kZFbmM92veRqLZYl5H9tLL1O-8s9WIJpKp4aRLRtAvhNeWpr6VayY8y3pdRBv9~IWhP~PPviMzw8x0lJww__'}
+                  src={profilePicPreview || `https://api.dicebear.com/8.x/initials/svg?seed=${name || 'U'}`}
                   alt="Profile Avatar"
                   className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md"
                 />
@@ -132,8 +170,8 @@ const AccountSettingsForm: React.FC = () => {
               <input type="email" id="email" value={email} disabled className="w-full p-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed" />
             </div>
             <div className="text-right">
-              <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90">
-                Save Changes
+              <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90 disabled:opacity-50" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>
@@ -141,10 +179,7 @@ const AccountSettingsForm: React.FC = () => {
 
         {activeSection === 'password' && (
           <form onSubmit={handlePasswordChange} className="space-y-6">
-            <div>
-              <label htmlFor="currentPassword"  className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-              <input type="password" id="currentPassword" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
-            </div>
+            {/* Current password not needed for Supabase password update for security reasons */}
             <div>
               <label htmlFor="newPassword"  className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
               <input type="password" id="newPassword" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
@@ -154,8 +189,8 @@ const AccountSettingsForm: React.FC = () => {
               <input type="password" id="confirmPassword" value={confirmPassword} onChange={e => setNewConfirmPassword(e.target.value)} className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue" />
             </div>
             <div className="text-right">
-              <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90">
-                Update Password
+              <button type="submit" className="bg-gradient-button text-white font-semibold py-3 px-8 rounded-full shadow-md hover:opacity-90 disabled:opacity-50" disabled={loading}>
+                {loading ? 'Updating...' : 'Update Password'}
               </button>
             </div>
           </form>
@@ -165,8 +200,8 @@ const AccountSettingsForm: React.FC = () => {
           <div className="p-6 border-2 border-red-300 bg-red-50 rounded-lg">
             <h3 className="text-xl font-bold text-red-800">Danger Zone</h3>
             <p className="text-red-700 mt-2 mb-6">Deleting your account is permanent and cannot be undone. All your data, including listings and favorites, will be permanently removed.</p>
-            <button onClick={() => setIsDeleteModalOpen(true)} className="bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-md hover:bg-red-700">
-              I understand, delete my account
+            <button onClick={() => setIsDeleteModalOpen(true)} className="bg-red-600 text-white font-bold py-3 px-8 rounded-full shadow-md hover:bg-red-700 disabled:opacity-50" disabled={loading}>
+              {loading ? 'Deleting...' : 'I understand, delete my account'}
             </button>
           </div>
         )}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBoardingHouses } from '../contexts/BoardingHouseContext';
-import { CheckCircle, ChevronDown, Heart } from 'lucide-react';
-import { Room } from './owner/AddNew';
+import { CheckCircle, ChevronDown, Heart, Loader2 } from 'lucide-react';
+import { Room } from '../types';
 import ImageGalleryModal from '../components/ImageGalleryModal';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,24 +17,32 @@ const NotFound = () => (
 const BoardingHouseDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getBoardingHouseById } = useBoardingHouses();
+  const { getBoardingHouseById, loading: housesLoading } = useBoardingHouses();
   const { user } = useAuth();
-  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { addFavorite, removeFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
 
-  const house = getBoardingHouseById(Number(id));
+  const [house, setHouse] = useState(getBoardingHouseById(Number(id)));
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const isFavorited = house ? isFavorite(house.id) : false;
-
   useEffect(() => {
-    if (house && house.rooms.length > 0) {
-      setSelectedRoom(house.rooms[0]);
+    const currentHouse = getBoardingHouseById(Number(id));
+    setHouse(currentHouse);
+    if (currentHouse && currentHouse.rooms.length > 0) {
+      setSelectedRoom(currentHouse.rooms[0]);
     } else {
       setSelectedRoom(null);
     }
-  }, [house]);
+  }, [id, getBoardingHouseById, housesLoading]);
+
+  if (housesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-brand-light-cyan">
+        <Loader2 className="animate-spin text-brand-blue" size={64} />
+      </div>
+    );
+  }
 
   if (!house) {
     return (
@@ -46,6 +54,8 @@ const BoardingHouseDetailsPage: React.FC = () => {
     );
   }
   
+  const isFavorited = isFavorite(house.id);
+
   const handleToggleFavorite = () => {
     if (!user || user.type !== 'seeker') {
       alert('Please log in as a Seeker to save favorites.');
@@ -60,17 +70,17 @@ const BoardingHouseDetailsPage: React.FC = () => {
   };
 
   const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const roomId = Number(e.target.value);
-    const room = house.rooms.find(r => r.id === roomId) || null;
+    const roomName = e.target.value;
+    const room = house.rooms.find(r => r.name === roomName) || null;
     setSelectedRoom(room);
   };
 
   const images = [
-    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0397/7d65/57ce3d70b9b66c773f1dfd6dbd3a4945?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=ACnyPGcyNXmCatGLm3G0Hob8jNudOzWWvyHS4n2zO~Nx8ivYGP23tn2RKu45p3jV5dI9MmUuxgYZFvX5Qa2m~nbVDOfPJ3d-anXfxA095U2ZVG-1jK3chMUITmzYmqIXjh3bt8mpNNPKMHb7InEWbIYLlybGqlgb-7jLT9q~QxJbzUBmciVGohUt3oFwl6sffMBLKm3ggh1-gL5d6t6ith9LFvAI4u2FMPppGC4D5PYudOYTppPV4LvTF46jg1Z1IiXkparuuBqBntM0I7G~mtaTdMDHGp2RRg8fqaaIrUuRiNT9tNHwaKVd2UfEZhyx7b5QihMQdlOl0p7EPVzugA__",
-    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/e028/f9c9/84c06ea76a1efdc4cee8804dec43a9dd?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=RLI11XsVGpGC-3qkbSuwk7bITPvlE5gOBouHpOkbro7wGSY5-rTkCxGDKNTBWd1GvcxWYLHrALiNocFF-kyIdNI8dKzc9-qltLyuVH~qYD7g9cinRB3pdwS5aWojww2MKMEDFZ9VaS9Z2jieAOdITYF2n-hTSeosYBMgI7w1~16gh7DPz3zOD1muLEolCprpmrzEsRTKrp74m3~hsLknzCR0UUr9w6~uRmZUC4CC3heGmjsbPyQpCrhWOpXbKvdIzdsyyCg-68-aqivDtzrX-lbSIyjETlU2z-gxpbG9pmB1hxfKxQNMbbv17GQlIAC9qTlO024Fnb-dTjZPyjbJ~A__",
-    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0f5e/21f0/66a27fa1b3cb1096bc957fa2709e994a?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=E~dYmUXSvH~3gS5n53bce-oNIFNOxdxUhvwx~oY9tghM2BLceuWZfPrP-JT5JXuzZ3X~d2L5PliIhGCD1k9HdQJnHCmi4d~jdOIwfijti~EU87aqVJn2KHAXW1Wef59DqA3E9bVCi9cu95gxWRz-JAzLFQ6q0w6Hz1mxFgPUT7GKrHwrSS-p6gHN5bXWVZvZkCrLTQIziSXt-N59wRmu8ddsoftfU-B-8WozyajUayUGxUmqZ~v1SLNCswBkpwjT7g0WTlak5IFmNxgL7yJSLF7ht7PnsHWMTGXAm3UEy6-t6912t4Oxa-2KsFsIoGmoyq10AI0eoPPPujtcxOWJqw__",
     house.imageUrl,
-  ];
+    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0397/7d65/57ce3d70b9b66c773f1dfd6dbd3a4945?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=ACnyPGcyNXmCatGLm3G0Hob8jNudOzWWvyHS4n2zO~Nx8ivYGP23tn2RKu45p3jV5dI9MmUuxgYZFvX5Qa2m~nbVDOfPJ3d-anXfxA095U2ZVG-1jK3chMUITmzYmqIXjh3bt8mpNNPKMHb7InEWbIYLlybGqlgb-7jLT9q~QxJbzUBmciVGohUt3oFwl6sffMBLKm3ggh1-gL5d6t6ith9LFvAI4u2FMPppGC4D5PYudOYTppPV4LvTF46jg1Z1IiXkparuuBqBntM0I7G~mtaTdMDHGp2RRg8fqaaIrUuRiNT9tNHwaKVd2UfEZhyx7b5QihMQdlOl0p7EPVzugA__",
+    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/e028/f9c9/84c06ea76a1efdc4cee8804dec43a9dd?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=RLI11XsVGpGC-3qkbSuwk7bITPvlE5gOBouHpOkbro7wGSY5-rTkCxGDKNTBWd1GvcxWYLHrALiNocFF-kyIdNI8dKzc9-qltLyuVH~qYD7g9cinRB3pdwS5aWojww2MKMEDFZ9VaS9Z2jieAOdITYF2n-hTSeosYBMgI7w1~16gh7DPz3zOD1muLEolCprpmrzEsRTKrp74m3~hsLknzCR0UUr9w6~uRmZUC4CC3heGmjsbPyQpCrhWOpXbKvdIzdsyyCg-68-aqivDtzrX-lbSIyjETlU2z-gxpbG9pmB1hxfKxQNMbbv17GQlIAC9qTlO024Fnb-dTjZPyjbJ~A__",
+    "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/0f5e/21f0/66a27fa1b3cb1096bc957fa2709e994a?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=E~dYmUXSvH~3gS5n53bce-oNIFNOxdxUhvwx~oY9tghM2BLceuWZfPrP-JT5JXuzZ3X~d2L5PliIhGCD1k9HdQJnHCmi4d~jdOIwfijti~EU87aqVJn2KHAXW1Wef59DqA3E9bVCi9cu95gxWRz-JAzLFQ6q0w6Hz1mxFgPUT7GKrHwrSS-p6gHN5bXWVZvZkCrLTQIziSXt-N59wRmu8ddsoftfU-B-8WozyajUayUGxUmqZ~v1SLNCswBkpwjT7g0WTlak5IFmNxgL7yJSLF7ht7PnsHWMTGXAm3UEy6-t6912t4Oxa-2KsFsIoGmoyq10AI0eoPPPujtcxOWJqw__",
+  ].filter(Boolean);
 
   const openGallery = (index: number) => {
     setSelectedImageIndex(index);
@@ -108,15 +118,17 @@ const BoardingHouseDetailsPage: React.FC = () => {
                   onClick={() => openGallery(index)}
                 />
               ))}
-              <div 
-                className="relative w-full h-48 cursor-pointer group"
-                onClick={() => openGallery(3)}
-              >
-                <img src={images[3]} alt="Gallery image 4" className="w-full h-full object-cover rounded-2xl shadow-md" />
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-2xl flex items-center justify-center transition-opacity group-hover:bg-opacity-70">
-                  <span className="text-white text-2xl font-bold">View All</span>
+              {images.length > 3 && (
+                <div 
+                  className="relative w-full h-48 cursor-pointer group"
+                  onClick={() => openGallery(3)}
+                >
+                  <img src={images[3]} alt="Gallery image 4" className="w-full h-full object-cover rounded-2xl shadow-md" />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-2xl flex items-center justify-center transition-opacity group-hover:bg-opacity-70">
+                    <span className="text-white text-2xl font-bold">View All</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -132,12 +144,12 @@ const BoardingHouseDetailsPage: React.FC = () => {
                     <div className="relative">
                       <select
                         id="room"
-                        value={selectedRoom.id}
+                        value={selectedRoom.name}
                         onChange={handleRoomChange}
                         className="w-full bg-brand-cyan-border text-black font-bold text-xl py-4 px-6 rounded-3xl appearance-none focus:outline-none shadow-[0px_4px_4px_0px_rgba(55,239,252,0.25)] cursor-pointer"
                       >
                         {house.rooms.map(room => (
-                          <option key={room.id} value={room.id}>{room.name}</option>
+                          <option key={room.name} value={room.name}>{room.name}</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={30} />
@@ -157,10 +169,11 @@ const BoardingHouseDetailsPage: React.FC = () => {
                   {user?.type === 'seeker' && (
                     <button
                       onClick={handleToggleFavorite}
-                      className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-110 ${isFavorited ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'}`}
+                      disabled={favoritesLoading}
+                      className={`p-4 rounded-full shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 ${isFavorited ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-500'}`}
                       aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                     >
-                      <Heart fill={isFavorited ? 'currentColor' : 'none'} size={24} />
+                      {favoritesLoading ? <Loader2 className="animate-spin" size={24} /> : <Heart fill={isFavorited ? 'currentColor' : 'none'} size={24} />}
                     </button>
                   )}
                 </div>

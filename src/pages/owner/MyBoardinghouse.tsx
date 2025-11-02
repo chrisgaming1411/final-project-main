@@ -1,12 +1,16 @@
 import React from 'react';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BoardingHouseCard from '../../components/BoardingHouseCard';
 import { useBoardingHouses } from '../../contexts/BoardingHouseContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const MyBoardinghousePage: React.FC = () => {
   const navigate = useNavigate();
-  const { boardingHouses } = useBoardingHouses();
+  const { boardingHouses, loading } = useBoardingHouses();
+  const { user } = useAuth();
+
+  const myBoardingHouses = boardingHouses.filter(house => house.ownerName === user?.name);
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -27,8 +31,12 @@ const MyBoardinghousePage: React.FC = () => {
       </div>
 
       <div className="space-y-8">
-        {boardingHouses.length > 0 ? (
-          boardingHouses.map((house) => (
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="animate-spin text-brand-blue" size={48} />
+          </div>
+        ) : myBoardingHouses.length > 0 ? (
+          myBoardingHouses.map((house) => (
             <BoardingHouseCard key={house.id} house={house} />
           ))
         ) : (

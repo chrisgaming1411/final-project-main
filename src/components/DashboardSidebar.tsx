@@ -16,8 +16,8 @@ const DashboardSidebar: React.FC = () => {
   const { logout, user } = useAuth();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  const confirmLogout = () => {
-    logout();
+  const confirmLogout = async () => {
+    await logout();
     setIsLogoutModalOpen(false);
     navigate('/login');
   };
@@ -40,7 +40,7 @@ const DashboardSidebar: React.FC = () => {
 
           <div className="flex items-center space-x-4 mb-16">
             <img
-              src={user?.profilePicture || "https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/72f7/1c48/1924a99473c91bfdac585c9cc9c2bc58?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mJnJD9EzUMxuOGa0xzUEmYC0JQNIRhM704Zqs0bzBIsJ~XT-QNlVIkfzY9vZFBTayulfvYsx-2Xp~dBb3O3yYB905KQ6s0lCcnt7BaGeDk2xnx3Gp1giTw~f9AJ6Ce9t11JF4iZ2gZVd4kCv339PTlrWc~-wRUK0pS3iwo5lHuDFCFbFIHyJoj3LijnqmvnthP8QAH6Jg-5Ef8bfZKmzc~x8~LU5eMKsbqLw4UkZjmI6bWc1BW4hkxyC5rFNHICjX0w7kZFbmM92veRqLZYl5H9tLL1O-8s9WIJpKp4aRLRtAvhNeWpr6VayY8y3pdRBv9~IWhP~PPviMzw8x0lJww__"}
+              src={user?.profilePicture || `https://api.dicebear.com/8.x/initials/svg?seed=${user?.name || 'U'}`}
               alt="User Avatar"
               className="w-20 h-20 rounded-full object-cover"
             />

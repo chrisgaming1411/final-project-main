@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useBoardingHouses, BoardingHouse } from '../contexts/BoardingHouseContext';
+import { useBoardingHouses } from '../contexts/BoardingHouseContext';
+import { BoardingHouse } from '../types';
 
 interface BoardingHouseCardProps {
   house: BoardingHouse;

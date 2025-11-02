@@ -1,14 +1,15 @@
 import React from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { useFavorites } from '../../contexts/FavoritesContext';
 import { useBoardingHouses } from '../../contexts/BoardingHouseContext';
 import SeekerBoardingHouseCard from '../../components/SeekerBoardingHouseCard';
 
 const SeekerFavoritesPage: React.FC = () => {
-  const { favoriteIds } = useFavorites();
-  const { boardingHouses } = useBoardingHouses();
+  const { favoriteIds, loading: favoritesLoading } = useFavorites();
+  const { boardingHouses, loading: housesLoading } = useBoardingHouses();
 
   const favoriteHouses = boardingHouses.filter(house => favoriteIds.includes(house.id));
+  const isLoading = favoritesLoading || housesLoading;
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -16,7 +17,11 @@ const SeekerFavoritesPage: React.FC = () => {
         My Favorites
       </h1>
       
-      {favoriteHouses.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="animate-spin text-brand-blue" size={48} />
+        </div>
+      ) : favoriteHouses.length > 0 ? (
         <div className="space-y-6">
           {favoriteHouses.map(house => (
             <SeekerBoardingHouseCard key={house.id} house={house} />

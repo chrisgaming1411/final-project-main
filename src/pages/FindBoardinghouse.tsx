@@ -2,10 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useBoardingHouses } from '../contexts/BoardingHouseContext';
 import FilterSidebar from '../components/FilterSidebar';
 import SeekerBoardingHouseCard from '../components/SeekerBoardingHouseCard';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 const FindBoardinghousePage: React.FC = () => {
-  const { boardingHouses } = useBoardingHouses();
+  const { boardingHouses, loading } = useBoardingHouses();
   const [filters, setFilters] = useState({
     searchTerm: '',
     priceMin: '',
@@ -35,7 +35,7 @@ const FindBoardinghousePage: React.FC = () => {
         const maxMatch = isNaN(priceMax) || roomPrice <= priceMax;
         return minMatch && maxMatch;
       });
-      // If no rooms, it can't match a price filter. If no price filter, it passes.
+      
       if (house.rooms.length === 0 && (!isNaN(priceMin) || !isNaN(priceMax))) return false;
       if (house.rooms.length > 0 && !matchesPrice && (!isNaN(priceMin) || !isNaN(priceMax))) return false;
 
@@ -58,23 +58,31 @@ const FindBoardinghousePage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-8">
           <FilterSidebar filters={filters} setFilters={setFilters} />
           <div className="w-full md:flex-1">
-            <div className="mb-6 text-lg text-gray-600">
-              Showing <span className="font-bold text-brand-blue">{filteredHouses.length}</span> of <span className="font-bold text-brand-dark-navy">{boardingHouses.length}</span> properties.
-            </div>
-            {filteredHouses.length > 0 ? (
-              <div className="space-y-6">
-                {filteredHouses.map(house => (
-                  <SeekerBoardingHouseCard key={house.id} house={house} />
-                ))}
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="animate-spin text-brand-blue" size={48} />
               </div>
             ) : (
-              <div className="text-center py-20 bg-white rounded-2xl shadow-md flex flex-col items-center">
-                <Search size={64} className="text-gray-300 mb-4" />
-                <h3 className="text-2xl font-semibold text-brand-dark-navy">No Properties Found</h3>
-                <p className="text-gray-500 mt-2 max-w-sm">
-                  Try adjusting your search or filters to find what you're looking for.
-                </p>
-              </div>
+              <>
+                <div className="mb-6 text-lg text-gray-600">
+                  Showing <span className="font-bold text-brand-blue">{filteredHouses.length}</span> of <span className="font-bold text-brand-dark-navy">{boardingHouses.length}</span> properties.
+                </div>
+                {filteredHouses.length > 0 ? (
+                  <div className="space-y-6">
+                    {filteredHouses.map(house => (
+                      <SeekerBoardingHouseCard key={house.id} house={house} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-20 bg-white rounded-2xl shadow-md flex flex-col items-center">
+                    <Search size={64} className="text-gray-300 mb-4" />
+                    <h3 className="text-2xl font-semibold text-brand-dark-navy">No Properties Found</h3>
+                    <p className="text-gray-500 mt-2 max-w-sm">
+                      Try adjusting your search or filters to find what you're looking for.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
