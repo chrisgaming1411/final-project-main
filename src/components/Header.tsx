@@ -1,24 +1,39 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuth();
+  const navigate = useNavigate();
 
-  const navLinks = [
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+    navigate('/login');
+  };
+
+  const publicLinks = [
     { name: 'Home', href: '/' },
     { name: 'Find a Place', href: '/find' },
     { name: 'About', href: '/about' },
-    { name: 'Login / Register', href: '/login' },
   ];
+
+  const getDashboardUrl = () => {
+    if (!user) return '/login';
+    return user.type === 'owner' ? '/dashboard' : '/seeker-dashboard';
+  };
+
+  const dashboardUrl = getDashboardUrl();
 
   return (
     <header className="bg-gradient-primary text-white font-bold relative shadow-md z-30">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
           <img 
-            src="https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/f6dd/665b/34697342d2b14a54054bcdeaff51c60e?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=CnCweB1ZAYzDFij45dFKizYvfbLnk5zuP~UE5S2O6y70y0UPCr2Vbw6mTziHytjTaDwT7pVo~yuN9nmy4UE4svQoPMKrt-RzSyjHA-VxYzTTpfpskBfYhJOFr4D2A2fIoHXHdU9gOLNp3OnAMYk4IDlvrVci03hmDYKrBg2g-jeoaeWfRa8IuaMFNyctnHvRte~1K4Bk1Pkz1~gvR-S9clcPr8~Q3n3FHZQC0xHkW0vrLJoWc6NLHhrrYL208ZE9LbAwyj3R0RqJ~MEH9kmW-29BRe7t0IRNPV93qLWb~FwgEVehI6w5zjKv82U~3Y-wDbpwSqPgxZwsINyksG02iw__" 
+            src="https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://img-wrapper.vercel.app/image?url=https://s3-alpha-sig.figma.com/img/f6dd/665b/34697342d2b14a54054bcdeaff51c60e?Expires=1762732800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=CnCweB1ZAYzDFij45dFKizYvfbLnk5zuP~UE5S2O6y70y0UPCr2Vbw6mTziHytjTaDwT7pVo~yuN9nmy4UE4svQoPMKrt-RzSyjHA-VxYzTTpfpskBfYhJOFr4D2A2fIoHXHdU9gOLNp3OnAMYk4IDlvrVci03hmDYKrBg2g-jeoaeWfRa8IuaMFNyctnHvRte~1K4Bk1Pkz1~gvR-S9clcPr8~Q3n3FHZQC0xHkW0vrLJoWc6NLHhrrYL208ZE9LbAwyj3R0RqJ~MEH9kmW-29BRe7t0IRNPV93qLWb~FwgEVehI6w5zjKv82U~3Y-wDbpwSqPgxZwsINyksG02iw__" 
             alt="Homebase Finder Logo" 
             className="h-12 w-12"
           />
@@ -29,7 +44,7 @@ const Header: React.FC = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
+          {publicLinks.map((link) => (
             <Link 
               key={link.name} 
               to={link.href} 
@@ -38,6 +53,20 @@ const Header: React.FC = () => {
               {link.name}
             </Link>
           ))}
+          {isAuthenticated ? (
+            <>
+              <Link to={dashboardUrl} className={`text-lg transition-colors ${location.pathname.includes('dashboard') ? 'text-brand-dark-navy' : 'text-white hover:text-brand-light-cyan'}`}>
+                Dashboard
+              </Link>
+              <button onClick={handleLogout} className="text-lg text-white hover:text-brand-light-cyan transition-colors">
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className={`text-lg transition-colors ${location.pathname === '/login' || location.pathname === '/register' ? 'text-brand-dark-navy' : 'text-white hover:text-brand-light-cyan'}`}>
+              Login / Register
+            </Link>
+          )}
         </nav>
 
         <div className="md:hidden">
@@ -50,7 +79,7 @@ const Header: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-gradient-primary z-20">
           <nav className="flex flex-col items-center space-y-4 py-6">
-            {navLinks.map((link) => (
+            {publicLinks.map((link) => (
               <Link 
                 key={link.name} 
                 to={link.href} 
@@ -60,6 +89,20 @@ const Header: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            {isAuthenticated ? (
+              <>
+                <Link to={dashboardUrl} className={`text-lg transition-colors ${location.pathname.includes('dashboard') ? 'text-brand-dark-navy' : 'text-white hover:text-brand-light-cyan'}`} onClick={() => setIsMenuOpen(false)}>
+                  Dashboard
+                </Link>
+                <button onClick={handleLogout} className="text-lg text-white hover:text-brand-light-cyan transition-colors">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className={`text-lg transition-colors ${location.pathname === '/login' || location.pathname === '/register' ? 'text-brand-dark-navy' : 'text-white hover:text-brand-light-cyan'}`} onClick={() => setIsMenuOpen(false)}>
+                Login / Register
+              </Link>
+            )}
           </nav>
         </div>
       )}

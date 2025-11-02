@@ -1,7 +1,7 @@
 import React from 'react';
 import AccountSettingsForm from '../../components/AccountSettingsForm';
 
-const AccountSettingsPage: React.FC = () => {
+const SeekerAccountSettingsPage: React.FC = () => {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <h1 className="text-4xl sm:text-5xl font-bold text-black mb-10">
@@ -12,4 +12,4 @@ const AccountSettingsPage: React.FC = () => {
   );
 };
 
-export default AccountSettingsPage;
+export default SeekerAccountSettingsPage;

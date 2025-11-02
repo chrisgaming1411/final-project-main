@@ -17,6 +17,13 @@ import AccountSettingsPage from './pages/owner/AccountSettings.tsx';
 import FindBoardinghousePage from './pages/FindBoardinghouse.tsx';
 import BoardingHouseDetailsPage from './pages/BoardingHouseDetails.tsx';
 import { BoardingHouseProvider } from './contexts/BoardingHouseContext.tsx';
+import { AuthProvider } from './contexts/AuthContext.tsx';
+import ProtectedRoute from './components/ProtectedRoute.tsx';
+import SeekerDashboardLayout from './layouts/SeekerDashboardLayout.tsx';
+import SeekerDashboardPage from './pages/seeker/Dashboard.tsx';
+import SeekerFavoritesPage from './pages/seeker/Favorites.tsx';
+import { FavoritesProvider } from './contexts/FavoritesContext.tsx';
+import SeekerAccountSettingsPage from './pages/seeker/AccountSettings.tsx';
 
 const router = createBrowserRouter([
   {
@@ -54,24 +61,46 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: 'dashboard',
-    element: <DashboardLayout />,
+    element: <ProtectedRoute allowedRoles={['owner']} />,
     children: [
-      { index: true, element: <OwnerDashboardPage /> },
-      { path: 'my-boardinghouse', element: <MyBoardinghousePage /> },
-      { path: 'add-new', element: <AddNewPage /> },
-      { path: 'edit-listing/:id', element: <AddNewPage /> },
-      { path: 'settings', element: <AccountSettingsPage /> },
-      // Redirect base dashboard to the main view
-      { path: '', element: <Navigate to="my-boardinghouse" replace /> }
+      {
+        path: 'dashboard',
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <Navigate to="my-boardinghouse" replace /> },
+          { path: 'my-boardinghouse', element: <MyBoardinghousePage /> },
+          { path: 'add-new', element: <AddNewPage /> },
+          { path: 'edit-listing/:id', element: <AddNewPage /> },
+          { path: 'settings', element: <AccountSettingsPage /> },
+        ]
+      }
+    ]
+  },
+  {
+    element: <ProtectedRoute allowedRoles={['seeker']} />,
+    children: [
+      {
+        path: 'seeker-dashboard',
+        element: <SeekerDashboardLayout />,
+        children: [
+          { index: true, element: <SeekerDashboardPage /> },
+          { path: 'find', element: <FindBoardinghousePage /> },
+          { path: 'favorites', element: <SeekerFavoritesPage /> },
+          { path: 'settings', element: <SeekerAccountSettingsPage /> },
+        ]
+      }
     ]
   }
 ]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BoardingHouseProvider>
-      <RouterProvider router={router} />
-    </BoardingHouseProvider>
+    <AuthProvider>
+      <BoardingHouseProvider>
+        <FavoritesProvider>
+          <RouterProvider router={router} />
+        </FavoritesProvider>
+      </BoardingHouseProvider>
+    </AuthProvider>
   </StrictMode>,
 );

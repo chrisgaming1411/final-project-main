@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,17 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.type === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/seeker-dashboard');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +34,21 @@ const LoginPage: React.FC = () => {
     }
 
     console.log('Logging in with:', { email, password, userType });
+    
+    // Simulate API call
     setTimeout(() => {
-      console.log('Login successful!');
+      // On successful login from API, call the context login function
+      const loggedInUser = { name: 'John Doe', type: userType as 'owner' | 'seeker' };
+      login(loggedInUser);
+      
       setLoading(false);
-      alert('Login successful! Redirecting to dashboard... (Simulation)');
-      navigate('/dashboard/my-boardinghouse');
+
+      // Navigate after login
+      if (loggedInUser.type === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/seeker-dashboard');
+      }
     }, 1500);
   };
 
