@@ -14,26 +14,43 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     if (!name || !email || !password) {
       setError('Please fill in all fields.');
-      setLoading(false);
       return;
     }
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
-      setLoading(false);
       return;
     }
+    
+    setLoading(true);
 
-    console.log('Registering with:', { name, email, password, userType });
+    // Simulate storing user in localStorage
     setTimeout(() => {
-      console.log('Registration successful!');
-      setLoading(false);
-      alert('Registration successful! Redirecting to login... (Simulation)');
-      navigate('/login');
-    }, 1500);
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const userExists = existingUsers.some((user: any) => user.email === email);
+
+        if (userExists) {
+          setError('An account with this email already exists.');
+          setLoading(false);
+          return;
+        }
+
+        // In a real app, password would be hashed before storing.
+        const newUser = { name, email, password, userType };
+        existingUsers.push(newUser);
+        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+        
+        setLoading(false);
+        alert('Registration successful! Redirecting to login...');
+        navigate('/login');
+      } catch (err) {
+        setError('An error occurred during registration. Please try again.');
+        setLoading(false);
+      }
+    }, 1000);
   };
 
   return (

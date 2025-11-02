@@ -67,7 +67,7 @@ const router = createBrowserRouter([
         path: 'dashboard',
         element: <DashboardLayout />,
         children: [
-          { index: true, element: <Navigate to="my-boardinghouse" replace /> },
+          { index: true, element: <OwnerDashboardPage /> },
           { path: 'my-boardinghouse', element: <MyBoardinghousePage /> },
           { path: 'add-new', element: <AddNewPage /> },
           { path: 'edit-listing/:id', element: <AddNewPage /> },

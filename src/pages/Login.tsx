@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('owner');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -32,24 +30,27 @@ const LoginPage: React.FC = () => {
       setLoading(false);
       return;
     }
-
-    console.log('Logging in with:', { email, password, userType });
     
-    // Simulate API call
+    // Simulate API call and check localStorage
     setTimeout(() => {
-      // On successful login from API, call the context login function
-      const loggedInUser = { name: 'John Doe', type: userType as 'owner' | 'seeker' };
-      login(loggedInUser);
-      
-      setLoading(false);
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const foundUser = existingUsers.find((user: any) => user.email === email);
 
-      // Navigate after login
-      if (loggedInUser.type === 'owner') {
-        navigate('/dashboard');
-      } else {
-        navigate('/seeker-dashboard');
+        if (foundUser && foundUser.password === password) {
+          const loggedInUser = { name: foundUser.name, type: foundUser.userType as 'owner' | 'seeker' };
+          login(loggedInUser);
+          setLoading(false);
+          // Navigation is handled by the useEffect hook
+        } else {
+          setError('Invalid email or password. Please try again or register.');
+          setLoading(false);
+        }
+      } catch (err) {
+        setError('An error occurred during login. Please try again.');
+        setLoading(false);
       }
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -77,18 +78,6 @@ const LoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-        </div>
-        <div className="relative">
-          <select
-            id="userType"
-            className="w-full px-8 py-5 text-xl md:text-2xl bg-brand-off-white text-black rounded-full border-2 border-brand-cyan-border focus:outline-none focus:ring-2 focus:ring-brand-blue appearance-none shadow-[0px_4px_4px_0px_rgba(85,225,247,0.25)]"
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-          >
-            <option value="owner">Owner</option>
-            <option value="seeker">Seeker</option>
-          </select>
-          <ChevronDown className="absolute right-8 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={30} />
         </div>
         
         {error && <p className="text-red-500 text-center text-lg">{error}</p>}
